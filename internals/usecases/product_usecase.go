@@ -18,7 +18,7 @@ func NewProductUsecase(productRepo *repositories.ProductRepository,) *ProductUse
 }
 
 // Method for creted new product
-func(u *ProductUseCase) createProducUsecase(ctx context.Context, productReq *models.CreateProductRequest)(*models.ResponseProduct, error){
+func(u *ProductUseCase) CreateProducUsecase(ctx context.Context, productReq *models.CreateProductRequest)(*models.ResponseProduct, error){
 	product, err := u.productRepository.CreateProduct(ctx, productReq)
 	if err != nil {
 		return nil, err

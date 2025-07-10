@@ -36,7 +36,7 @@ func(p *ProductRepository) CreateProduct(ctx context.Context, product *models.Cr
 		Insert("products").
 		Columns("product_name", "product_price", "product_description", "product_category").
 		Values(product.ProductName, product.ProductPrice, product.ProductDescription, product.ProductCategory).
-		Suffix("RETURNING id, product_name, product_price, product_description, product_category")
+		Suffix("RETURNING id, product_name, product_price, product_description, product_category, created_at, updated_at")
 	row := query.RunWith(p.db).QueryRowContext(ctx)
 
 	var productResponse models.Product
