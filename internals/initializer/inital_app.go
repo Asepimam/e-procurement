@@ -5,6 +5,7 @@ import (
 	"e-procurement/internals/delivery/routers"
 	"e-procurement/internals/repositories"
 	"e-procurement/internals/usecases"
+	"e-procurement/pkg/auth"
 	"e-procurement/pkg/connections"
 	"net/http"
 	"time"
@@ -31,16 +32,28 @@ func InitializeApp() (*App, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// initialize jwt
+	jwtSecret := "secreate"
+	JWT:=auth.NewJWT(jwtSecret)
+	// if os.Getenv("SECRET_KE")
+
 	// intial repositories
+	categoryRepo := repositories.NewCategoryRepository(db)
 	userRepo := repositories.NewUserRepository(db)
+	productRepo := repositories.NewProductUseCase(db)
 	// intial usecases
 	authUseCase := usecases.NewAuthUseCase(userRepo)
+	productUsecase := usecases.NewProductUsecase(productRepo)
+	categoryUsecase := usecases.NewCategoryUsecase(categoryRepo)
 	// inital routers
 	r := routers.Router{
 		User:   "user",
 		Auth: *authUseCase,
 		Vendor: "vendor",
-		Product: "product",
+		Product: *productUsecase,
+		Category: *categoryUsecase,
+		JWT: JWT,
 	}
 	routers := routers.NewRouter(&r)
 	app := &App{
