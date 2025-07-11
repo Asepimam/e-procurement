@@ -50,3 +50,5 @@ func (j *JWT) ValidateToken(tokenString string) (jwt.MapClaims, error) {
 
     return claims, nil
 }
+
+func (j *JWT) RefreshToken()(string, error) {return "", nil}
