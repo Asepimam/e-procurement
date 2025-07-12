@@ -7,7 +7,7 @@ type CreateCategoryRequest struct {
 	Description string 		`json:"description" validate:"required"`
 }
 
-type CreateCategoryResponse struct {
+type CategoryResponse struct {
 	ID          string  		`json:"id"`
 	Name        string 		`json:"name"`
 	Description string 		`json:"description"`
@@ -16,7 +16,6 @@ type CreateCategoryResponse struct {
 }
 
 type UpdateCategoryRequest struct {
-	ID          string  		`json:"id" validate:"required"`
 	Name        string 		`json:"name" validate:"required"`
 	Description string 		`json:"description" validate:"required"`
 }
