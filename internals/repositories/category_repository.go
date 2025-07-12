@@ -31,9 +31,9 @@ func NewCategoryRepository(db *sql.DB) *CategoryRepository {
 func(c *CategoryRepository) CreateCategory(ctx context.Context, category *models.CreateCategoryRequest) (*models.Category, error) {
 	query := c.SQLBuilder.
 		Insert("categories").
-		Columns("name", "description").
+		Columns("category_name", "descriptions").
 		Values(category.Name,category.Description).
-		Suffix("RETURNING id, category_name, description, created_at, updated_at")
+		Suffix("RETURNING id, category_name, descriptions, created_at, updated_at")
 
 	row := query.RunWith(c.db).QueryRowContext(ctx)
 	var categoryResponse models.Category
@@ -55,13 +55,12 @@ func(c *CategoryRepository) CreateCategory(ctx context.Context, category *models
 // returns:
 // 		[]*models.Category: slice of pointers to Category models
 // 		error: error if any occurred during the operation
-func(c *CategoryRepository) GetAllCategories(ctx context.Context,limit,offset int64) ([]*models.Category, error) {
+func(c *CategoryRepository) GetAllCategories(ctx context.Context,limit,offset int) ([]*models.Category, error) {
 	query := c.SQLBuilder.
-		Select("id", "category_name", "description", "created_at", "updated_at").
+		Select("id", "category_name", "descriptions", "created_at", "updated_at").
 		From("categories").
 		Limit(uint64(limit)).
-		Offset(uint64(offset)).
-		Suffix("ORDER BY created_at DESC")
+		Offset(uint64(offset))
 
 
 	rows, err := query.RunWith(c.db).QueryContext(ctx)
@@ -99,7 +98,7 @@ func(c *CategoryRepository) GetAllCategories(ctx context.Context,limit,offset in
 // 		error: error if any occurred during the operation
 func(c *CategoryRepository) GetCategoryByID(ctx context.Context, id string) (*models.Category, error) {
 	query := c.SQLBuilder.
-		Select("id", "category_name", "description", "created_at", "updated_at").
+		Select("id", "category_name", "descriptions", "created_at", "updated_at").
 		From("categories").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
@@ -129,13 +128,13 @@ func(c *CategoryRepository) GetCategoryByID(ctx context.Context, id string) (*mo
 // returns:
 // 		*models.Category: pointer to the updated Category model
 // 		error: error if any occurred during the operation
-func(c *CategoryRepository) UpdateCategory(ctx context.Context, category *models.UpdateCategoryRequest) (*models.Category, error) {
+func(c *CategoryRepository) UpdateCategory(ctx context.Context,id string, category *models.UpdateCategoryRequest) (*models.Category, error) {
 	query := c.SQLBuilder.
 		Update("categories").
 		Set("category_name", category.Name).
-		Set("description", category.Description).
-		Where(sq.Eq{"id": category.ID}).
-		Suffix("RETURNING id, category_name, description, created_at, updated_at")
+		Set("descriptions", category.Description).
+		Where(sq.Eq{"id": id}).
+		Suffix("RETURNING id, category_name, descriptions, created_at, updated_at")
 
 	row := query.RunWith(c.db).QueryRowContext(ctx)
 	var updatedCategory models.Category
@@ -179,4 +178,17 @@ func(c *CategoryRepository) DeleteCategory(ctx context.Context, id string) error
 		return sql.ErrNoRows // No category found to delete
 	}
 	return nil
+}
+
+func(c *CategoryRepository) CountAllCategories(ctx context.Context) (int, error) {
+	query := c.SQLBuilder.
+		Select("COUNT(*)").
+		From("categories")
+
+	row := query.RunWith(c.db).QueryRowContext(ctx)
+	var count int
+	if err := row.Scan(&count); err != nil {
+		return 0, err
+	}
+	return count, nil
 }
