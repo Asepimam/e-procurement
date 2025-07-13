@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"e-procurement/internals/domain/models"
+	"log"
 
 	sq "github.com/Masterminds/squirrel"
 )
@@ -34,7 +35,7 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	//  	error: if any occurred during the operation.
 func (r *UserRepository) GetAll(ctx context.Context, limit, offset int) ([]models.UserResponse, error) {
 	query := r.SQKBuilder.
-		Select("id, username, email, created_at, updated_at").
+		Select("id, user_name, email, role, created_at, updated_at").
 		From("users").
 		Limit(uint64(limit)).
 		Offset(uint64(offset))
@@ -49,7 +50,7 @@ func (r *UserRepository) GetAll(ctx context.Context, limit, offset int) ([]model
 	var users []models.UserResponse
 	for rows.Next() {
 		var user models.UserResponse
-		if err := rows.Scan(&user.ID, &user.UserName, &user.Email, &user.CreatedAt, &user.UpdatedAt); err != nil {
+		if err := rows.Scan(&user.ID, &user.UserName, &user.Email,&user.Role, &user.CreatedAt, &user.UpdatedAt); err != nil {
 			return nil, err
 		}
 		users = append(users, user)
@@ -75,15 +76,15 @@ func (r *UserRepository) GetAll(ctx context.Context, limit, offset int) ([]model
 	// 		error : if any occurred during the operation.
 func (r *UserRepository) GetById(ctx context.Context, id string) (*models.User, error) {
 	query := r.SQKBuilder.
-		Select("id, username, email, password").
-		From("users").
+		Select("id, user_name, email, password, role").
+		From("e_procurement.users").
 		Where(sq.Eq{"id": id}).
 		Limit(1)
 
 	row := query.RunWith(r.db).QueryRowContext(ctx)
 	var user models.User
 
-	err := row.Scan(&user.ID, &user.UserName, &user.Email, &user.Password)
+	err := row.Scan(&user.ID, &user.UserName, &user.Email, &user.Password, &user.Role)
 	if err != nil {
 		
 		if err == sql.ErrNoRows {
@@ -106,17 +107,17 @@ func (r *UserRepository) GetById(ctx context.Context, id string) (*models.User, 
 	// returns:
 	// 		userResponse: a pointer to UserResponse containing the created user details.
 	// 		error: an error if any occurred during the operation.
-func (r *UserRepository) Create(ctx context.Context, user *models.CreateUserRequest) (*models.UserResponse, error) {
+func (r *UserRepository) Create(ctx context.Context, user *models.CreateUserRequest) (*models.User, error) {
 	query := r.SQKBuilder.
 		Insert("users").
-		Columns("username", "email", "password").
+		Columns("user_name", "email", "password").
 		Values(user.UserName, user.Email, user.Password).
-		Suffix("RETURNING id, username, email, created_at, updated_at")
+		Suffix("RETURNING id, user_name, email, role, created_at, updated_at")
 
 	row := query.RunWith(r.db).QueryRowContext(ctx)
 
-	var userResponse models.UserResponse
-	err := row.Scan(&userResponse.ID, &userResponse.UserName, &userResponse.Email, &userResponse.CreatedAt, &userResponse.UpdatedAt)
+	var userResponse models.User
+	err := row.Scan(&userResponse.ID, &userResponse.UserName, &userResponse.Email,&userResponse.Role, &userResponse.CreatedAt, &userResponse.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -137,16 +138,17 @@ func (r *UserRepository) Create(ctx context.Context, user *models.CreateUserRequ
 func (r *UserRepository) Update(ctx context.Context, id string, user *models.User) (*models.UserResponse, error) {
 	query := r.SQKBuilder.
 		Update("users").
-		Set("username", user.UserName).
+		Set("user_name", user.UserName).
 		Set("email", user.Email).
 		Set("password", user.Password).
+		Set("role", user.Role).
 		Where(sq.Eq{"id": id}).
-		Suffix("RETURNING id, username, email, created_at, updated_at")
+		Suffix("RETURNING id, user_name, email, role, created_at, updated_at")
 
 	row := query.RunWith(r.db).QueryRowContext(ctx)
 
 	var resp models.UserResponse
-	err := row.Scan(&resp.ID, &resp.UserName, &resp.Email, &resp.CreatedAt, &resp.UpdatedAt)
+	err := row.Scan(&resp.ID, &resp.UserName, &resp.Email,&resp.Role, &resp.CreatedAt, &resp.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil // No user found, return nil
@@ -191,16 +193,17 @@ func (r *UserRepository) Delete(ctx context.Context, id string) error {
 	// 		UserResponse: a pointer to UserResponse containing user details if found.
 	//  	error: an error if any occurred during the operation.
 func (r *UserRepository) Authenticate(ctx context.Context, email string) (*models.User, error) {
+	log.Printf("Authenticating user with email: %s", email)
 	query := r.SQKBuilder.
-		Select("id, username, email, password").
-		From("users").
+		Select("id, user_name, email, password, role").
+		From("e_procurement.users").
 		Where(sq.Eq{"email": email}).
 		Limit(1)
 
 	row := query.RunWith(r.db).QueryRowContext(ctx)
 
 	var user models.User
-	err := row.Scan(&user.ID, &user.UserName, &user.Email, &user.Password)
+	err := row.Scan(&user.ID, &user.UserName, &user.Email, &user.Password, &user.Role)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
