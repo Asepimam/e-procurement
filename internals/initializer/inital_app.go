@@ -53,9 +53,10 @@ func InitializeApp() (*App, error) {
 	productUsecase := usecases.NewProductUsecase(productRepo,vendorRepo)
 	categoryUsecase := usecases.NewCategoryUsecase(categoryRepo)
 	vendorUseCase := usecases.NewVendorUseCase(vendorRepo,userRepo)
+	userUseCase := usecases.NewUserUseCase(userRepo)
 	// inital routers
 	r := routers.Router{
-		User:   "user",
+		User:   *userUseCase,
 		Auth: *authUseCase,
 		Vendor: *vendorUseCase,
 		Product: *productUsecase,

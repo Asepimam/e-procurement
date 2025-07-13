@@ -10,7 +10,7 @@ import (
 )
 
 type Router struct {
-	User    string
+	User    usecases.UserUseCase
 	Auth    usecases.AuthUseCase
 	Vendor  usecases.VendorUseCase
 	Product usecases.ProductUseCase
@@ -23,6 +23,13 @@ type Router struct {
 func registerAuthRoutes(r chi.Router, authHandler *https.AuthHttp) {
 	r.Post("/auth/login", authHandler.Authentication)
 	r.Post("/auth/register", authHandler.Create)
+}
+
+func registerUserRoutes(r chi.Router, userHandler *https.UserHttp) {
+	r.Get("/user", userHandler.GetUserByID)
+	r.Put("/user", userHandler.UpdateUser)
+	r.Delete("/user", userHandler.DeleteUser)
+	r.Put("/user/password", userHandler.ChangePassword)
 }
 
 func registerProductRoutes(r chi.Router, productHandler *https.ProductHttp) {
@@ -56,6 +63,7 @@ func NewRouter(r *Router) http.Handler {
 	jwtMiddleware := auth.NewAuthMiddleware(r.JWT)
 
 	authHandler := https.NewAuthHttp(r.Auth)
+	userHandler := https.NewUserHttp(r.User)
 	productHandler := https.NewProductHttp(r.Product)
 	categoryHandler := https.NewCategoryHttp(r.Category)
 	vendorHandler := https.NewVendortHttp(r.Vendor)
@@ -69,6 +77,7 @@ func NewRouter(r *Router) http.Handler {
 		// protected routes
 		r.Group(func(protected chi.Router) {
 			protected.Use(jwtMiddleware.VerifyToken)
+			registerUserRoutes(protected, userHandler)
 			registerProductRoutes(protected,productHandler)
 			registerCategoryRoutes(protected, categoryHandler)
 			registerVendorRouters(protected, vendorHandler)

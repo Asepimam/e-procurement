@@ -74,7 +74,7 @@ func (r *UserRepository) GetAll(ctx context.Context, limit, offset int) ([]model
 	// returns: 
 	// 		UserResponse : a pointer to UserResponse containing user details.
 	// 		error : if any occurred during the operation.
-func (r *UserRepository) GetById(ctx context.Context, id string) (*models.User, error) {
+func (r *UserRepository) GetUserByID(ctx context.Context, id string) (*models.User, error) {
 	query := r.SQKBuilder.
 		Select("id, user_name, email, password, role").
 		From("e_procurement.users").
@@ -135,13 +135,12 @@ func (r *UserRepository) Create(ctx context.Context, user *models.CreateUserRequ
 	// returns:
 	// 		UserResponse: a pointer to UserResponse containing the updated user details.
 	//  	error: if any occurred during the operation.
-func (r *UserRepository) Update(ctx context.Context, id string, user *models.User) (*models.UserResponse, error) {
+func (r *UserRepository) UpdateUser(ctx context.Context, id string, user *models.UpdateUserRequest) (*models.UserResponse, error) {
 	query := r.SQKBuilder.
 		Update("users").
 		Set("user_name", user.UserName).
 		Set("email", user.Email).
 		Set("password", user.Password).
-		Set("role", user.Role).
 		Where(sq.Eq{"id": id}).
 		Suffix("RETURNING id, user_name, email, role, created_at, updated_at")
 
@@ -266,4 +265,31 @@ func (r *UserRepository) GetTotalCount(ctx context.Context) (int64, error) {
 	}
 
 	return count, nil
+}
+
+// updatePassword updates the password of a user in the database.
+// It modifies the user's password based on the provided ID and returns the updated user response.
+// parameters:
+// 		ctx: context for request-scoped values and cancellation.
+// 		id: the unique identifier of the user whose password is to be updated.
+// 		newPassword: the new password to be set for the user.
+// // returns:
+// 		errors: an error if any occurred during the operation.
+func (r *UserRepository) UpdatePassword(ctx context.Context, id string, newPassword string) error {
+	query := r.SQKBuilder.
+		Update("users").
+		Set("password", newPassword).
+		Where(sq.Eq{"id": id})
+
+	result, err := query.RunWith(r.db).ExecContext(ctx)
+	if err != nil {
+		return err
+	}
+	// Get affected rows count
+	affected, _ := result.RowsAffected()
+	if affected == 0 {
+		return sql.ErrNoRows // No user found to update
+	}
+
+	return nil
 }
