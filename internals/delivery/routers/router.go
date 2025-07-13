@@ -12,7 +12,7 @@ import (
 type Router struct {
 	User    string
 	Auth    usecases.AuthUseCase
-	Vendor  string
+	Vendor  usecases.VendorUseCase
 	Product usecases.ProductUseCase
 	Category usecases.CategoryUsecase
 	JWT *auth.JWT
@@ -27,10 +27,27 @@ func registerAuthRoutes(r chi.Router, authHandler *https.AuthHttp) {
 
 func registerProductRoutes(r chi.Router, productHandler *https.ProductHttp) {
 	r.Post("/vendor/product",productHandler.CreateProduct)
+	r.Get("/vendor/products", productHandler.GetAllProducts)
+	r.Get("/vendor/products/{id}", productHandler.GetProductByID)
+	r.Put("/vendor/products/{id}", productHandler.UpdateProduct)
+	r.Delete("/vendor/products/{id}", productHandler.DeleteProduct)
+	r.Get("/vendor/products/category/{categoryID}", productHandler.GetProductsByCategory)
 }
 
 func registerCategoryRoutes(r chi.Router, categoryHandler *https.CategoryHttp) {
 	r.Post("/vendor/product_category", categoryHandler.CreateCategory)
+	r.Get("/vendor/product_categories", categoryHandler.GetCategory)
+	r.Get("/vendor/product_categories/{id}", categoryHandler.GetCategoryByID)
+	r.Put("/vendor/product_categories/{id}", categoryHandler.UpdateCategory)
+	r.Delete("/vendor/product_categories/{id}", categoryHandler.DeleteCategory)
+}
+
+func registerVendorRouters(r chi.Router, vendorHandler *https.VendorHttp) {
+	r.Post("/vendor", vendorHandler.CreateVendor)
+	r.Get("/vendor", vendorHandler.GetAllVendors)
+	r.Get("/vendor/{id}", vendorHandler.GetVendorByID)
+	r.Put("/vendor/{id}", vendorHandler.UpdateVendor)
+	r.Delete("/vendor/{id}", vendorHandler.DeleteVendor)
 }
 
 func NewRouter(r *Router) http.Handler {
@@ -41,6 +58,7 @@ func NewRouter(r *Router) http.Handler {
 	authHandler := https.NewAuthHttp(r.Auth)
 	productHandler := https.NewProductHttp(r.Product)
 	categoryHandler := https.NewCategoryHttp(r.Category)
+	vendorHandler := https.NewVendortHttp(r.Vendor)
 	router.Route("/api/v1/", func(r chi.Router) {
 		// public routes
 		r.Get("/hallo", func(w http.ResponseWriter, r *http.Request) {
@@ -51,8 +69,9 @@ func NewRouter(r *Router) http.Handler {
 		// protected routes
 		r.Group(func(protected chi.Router) {
 			protected.Use(jwtMiddleware.VerifyToken)
-			registerProductRoutes(r,productHandler)
-			registerCategoryRoutes(r, categoryHandler)
+			registerProductRoutes(protected,productHandler)
+			registerCategoryRoutes(protected, categoryHandler)
+			registerVendorRouters(protected, vendorHandler)
 		})
 	})
 	return router
