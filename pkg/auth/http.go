@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"e-procurement/pkg/constans"
 	response "e-procurement/pkg/responses"
 	"net/http"
 	"strings"
@@ -16,12 +17,6 @@ func NewAuthMiddleware(jwt *JWT) *AuthHttp {
 	return &AuthHttp{jwt: jwt}
 }
 
-type contextKey string
-
-const (
-	ContextUserIDKey   contextKey = "user_id"
-	ContextPositionKey contextKey = "position"
-)
 
 func (m *AuthHttp) VerifyToken(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -50,8 +45,8 @@ func (m *AuthHttp) VerifyToken(next http.Handler) http.Handler {
 			return
 		}
 		
-		ctx := context.WithValue(r.Context(), ContextUserIDKey, userID)
-		ctx = context.WithValue(ctx, ContextPositionKey, position)
+		ctx := context.WithValue(r.Context(), constans.ContextUserIDKey, userID)
+		ctx = context.WithValue(ctx, constans.ContextPositionKey, position)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
