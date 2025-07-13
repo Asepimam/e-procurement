@@ -4,6 +4,8 @@ import (
 	"e-procurement/internals/delivery/https"
 	"e-procurement/internals/usecases"
 	"e-procurement/pkg/auth"
+	"e-procurement/pkg/chi_middlewar"
+
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -59,6 +61,8 @@ func registerVendorRouters(r chi.Router, vendorHandler *https.VendorHttp) {
 
 func NewRouter(r *Router) http.Handler {
 	router := chi.NewRouter()
+	// setting body is json by default
+	router.Use(chi_middlewar.JSONContentTypeMiddleware)
 	// Middleware can be added here if needed
 	jwtMiddleware := auth.NewAuthMiddleware(r.JWT)
 
