@@ -2,7 +2,7 @@ package context
 
 import (
 	"context"
-	"e-procurement/pkg/auth"
+	"e-procurement/pkg/constans"
 	"errors"
 	"log"
 )
@@ -12,7 +12,7 @@ func GetUserIDFromContext(ctx context.Context) (string, error) {
 		return "", errors.New("context is nil")
 	}
 
-	userID, ok := ctx.Value(auth.ContextUserIDKey).(string)
+	userID, ok := ctx.Value(constans.ContextUserIDKey).(string)
 	log.Printf("Extracted user ID from context: %s", userID)
 	if !ok || userID == "" {
 		return "", errors.New("user ID not found in context")
