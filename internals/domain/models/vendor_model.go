@@ -18,13 +18,31 @@ type Vendor struct {
 type CreateVendorRequest struct {
 	VendorName 		string `json:"vendor_name" validate:"required"`
 	Description 	string `json:"description" validate:"required"`
-	UserID     		string `json:"user_id" validate:"required,uuid"`
+	// UserID     		string `json:"user_id" validate:"required,uuid"`
+}
+
+type CreateVendorResponse struct {
+	ID          	string    `json:"id"`
+	VendorName  	string    `json:"vendor_name"`
+	Description 	string    `json:"description"`
+	UserID      	string    `json:"user_id"`
+	CreatedAt   	time.Time `json:"created_at"`
+	UpdatedAt   	time.Time `json:"updated_at"`
 }
 
 type UpdateVendorRequest struct {
 	VendorName 		string `json:"vendor_name" validate:"required"`
 	Description 	string `json:"description" validate:"required"`
-	UserID     		string `json:"user_id" validate:"required,uuid"`
+	UserID    		string `json:"user_id" validate:"required,uuid"`
+}
+
+type UpdateVendorResponse struct {
+	ID          	string    `json:"id"`
+	VendorName  	string    `json:"vendor_name"`
+	Description 	string    `json:"description"`
+	UserID      	string    `json:"user_id"`
+	CreatedAt   	time.Time `json:"created_at"`
+	UpdatedAt   	time.Time `json:"updated_at"`
 }
 
 type VendorResponse struct {

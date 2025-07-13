@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"e-procurement/internals/domain/models"
+	"log"
 
 	sq "github.com/Masterminds/squirrel"
 )
@@ -29,11 +30,11 @@ func NewVendorRepository(db *sql.DB) *VendorRepository {
 // returns:
 // 		VendorResponse: a VendorResponse model containing the details of the created vendor.
 // 		errors: if any occurred during the operation.
-func (v *VendorRepository) CreateVendor(ctx context.Context, vendorModel *models.CreateVendorRequest) (*models.Vendor, error) {
+func (v *VendorRepository) CreateVendor(ctx context.Context, userId string, vendorModel *models.CreateVendorRequest) (*models.Vendor, error) {
 	query := v.SQLBuilder.
 		Insert("vendors").
 		Columns("vendor_name", "description", "user_id").
-		Values(vendorModel.VendorName, vendorModel.Description, vendorModel.UserID).
+		Values(vendorModel.VendorName, vendorModel.Description, userId).
 		Suffix("RETURNING id, vendor_name, description, user_id, created_at, updated_at")
 
 	row := query.RunWith(v.db).QueryRowContext(ctx)
@@ -61,6 +62,7 @@ func (v *VendorRepository) CreateVendor(ctx context.Context, vendorModel *models
 // 		ctx: context for request-scoped values and cancellation.
 // 		limit: number of vendors to retrieve.
 func (v *VendorRepository) GetAllVendors(ctx context.Context, limit, offset int) ([]*models.Vendor, error) {
+	log.Println("Fetching all vendors with limit:", limit, "and offset:", offset, "from database")
 	query := v.SQLBuilder.
 		Select(
 			"v.id", 
@@ -74,10 +76,14 @@ func (v *VendorRepository) GetAllVendors(ctx context.Context, limit, offset int)
 		From("e_procurement.vendors v").
 		LeftJoin("e_procurement.users u ON v.user_id = u.id").
 		Limit(uint64(limit)).
-		Offset(uint64(offset))
+		Offset(uint64(offset)).
+		Suffix("ORDER BY v.created_")
 
 	rows, err := query.RunWith(v.db).QueryContext(ctx)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // No vendors found
+		}
 		return nil, err
 	}
 	defer rows.Close()
@@ -94,10 +100,12 @@ func (v *VendorRepository) GetAllVendors(ctx context.Context, limit, offset int)
 			&vendor.UpdatedAt,
 		)
 		if err != nil {
+			log.Println("Error scanning vendor row:", err)
 			return nil, err
 		}
 		vendors = append(vendors, &vendor)
 	}
+	
 	return vendors, nil
 }
 	
@@ -150,13 +158,13 @@ func (v *VendorRepository) GetVendorByID(ctx context.Context, id string) (*model
 // returns:
 // 		VendorResponse: a VendorResponse model containing the updated details of the vendor.
 // 		errors: if any occurred during the operation.
-func (v *VendorRepository) UpdateVendor(ctx context.Context,id string, vendorModel *models.UpdateVendorRequest) (*models.Vendor, error) {
+func (v *VendorRepository) UpdateVendor(ctx context.Context,vendorID string, vendorModel *models.UpdateVendorRequest) (*models.Vendor, error) {
 	query := v.SQLBuilder.
 		Update("vendors").
 		Set("vendor_name", vendorModel.VendorName).
 		Set("description", vendorModel.Description).
 		Set("user_id", vendorModel.UserID).
-		Where(sq.Eq{"id": id}).
+		Where(sq.Eq{"id": vendorID}).
 		Suffix("RETURNING id, vendor_name, description, user_id, created_at, updated_at")
 
 	row := query.RunWith(v.db).QueryRowContext(ctx)
@@ -249,6 +257,9 @@ func(v *VendorRepository) GetVendorByUserID(ctx context.Context, userID string) 
 		&vendor.UpdatedAt,
 	)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil // No vendor found for the user ID
+		}
 		return nil, err
 	}
 

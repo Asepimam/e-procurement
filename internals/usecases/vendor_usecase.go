@@ -4,7 +4,9 @@ import (
 	"context"
 	"e-procurement/internals/domain/models"
 	"e-procurement/internals/repositories"
+	customContext "e-procurement/pkg/context"
 	"fmt"
+	"log"
 )
 
 type VendorUseCase struct {
@@ -21,19 +23,36 @@ func NewVendorUseCase(vendorRepo *repositories.VendorRepository,userRepo *reposi
 }
 
 // method to create a new vendor
-func (v *VendorUseCase) CreateVendorUsecase(ctx context.Context, vendorReq *models.CreateVendorRequest) (*models.VendorResponse, error) {
-	exitsUser, err := v.userRepository.GetById(ctx, vendorReq.UserID)
+func (v *VendorUseCase) CreateVendorUsecase(ctx context.Context, vendorReq *models.CreateVendorRequest) (*models.CreateVendorResponse, error) {
+
+	userIdContext,err := customContext.GetUserIDFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user ID from context: %w", err)
+	}
+	if userIdContext == "" {
+		return nil, fmt.Errorf("user ID not found in context")
+	}
+
+	exitsUser, err := v.userRepository.GetUserByID(ctx, userIdContext)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 	if exitsUser == nil {
-		return nil, fmt.Errorf("user with ID %s does not exist", vendorReq.UserID)
+		return nil, fmt.Errorf("user with ID %s does not exist", exitsUser.ID)
 	}
-	vendor, err := v.vendorRepository.CreateVendor(ctx, vendorReq)
+	// validate user ready vendor
+	userVendorsExists, err := v.vendorRepository.GetVendorByUserID(ctx, exitsUser.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user vendors: %w", err)
+	}
+	if userVendorsExists != nil {	
+		return nil, fmt.Errorf("user already has a vendor")
+	}
+	vendor, err := v.vendorRepository.CreateVendor(ctx,exitsUser.ID, vendorReq)
 	if err != nil {
 		return nil, err
 	}
-	vendorResponse := &models.VendorResponse{
+	vendorResponse := &models.CreateVendorResponse{
 	   ID:          vendor.ID,
 	   VendorName:  vendor.VendorName,
 	   Description: vendor.Description,
@@ -46,22 +65,27 @@ func (v *VendorUseCase) CreateVendorUsecase(ctx context.Context, vendorReq *mode
 
 // Method to Get All Vendors
 func (v *VendorUseCase) GetAllVendors(ctx context.Context, limit, page int) ([]*models.Vendor, int, error) {
+	Offset := (page - 1) * limit
+
 	if limit <= 0 {
 		limit = 10 // default limit
 	}
-	if page <= 0 {
-		page = 1 // default offset
+	if Offset <= 0 {
+		Offset = 1 // default offset
 	}
-	newOffset := (page - 1) * limit
-
+	if limit > 100  || Offset > 100 {
+		return nil, 0, fmt.Errorf("limit and offset must be less than or equal to 100")
+	}
 	// Query total count
 	count, err := v.vendorRepository.CountVendors(ctx)
+	log.Println("Total vendors count:", count)
 	if err != nil {
 		return nil, 0, err
 	}
-
+	log.Println("Limit:", limit, "Offset:", Offset)
 	// Get vendors from repository
-	vendors, err := v.vendorRepository.GetAllVendors(ctx, limit, newOffset )
+	vendors, err := v.vendorRepository.GetAllVendors(ctx, limit, Offset )
+	log.Println("Vendors retrieved:", vendors)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -94,7 +118,7 @@ func (v *VendorUseCase) GetVendorByID(ctx context.Context, id string) (*models.V
 }
 
 // Method to Update Vendor
-func (v *VendorUseCase) UpdateVendor(ctx context.Context, id string, vendorReq *models.UpdateVendorRequest) (*models.VendorResponse, error) {
+func (v *VendorUseCase) UpdateVendor(ctx context.Context, id string, vendorReq *models.UpdateVendorRequest) (*models.UpdateVendorResponse, error) {
 	existingVendor, err := v.vendorRepository.GetVendorByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("vendor not found: %w", err)
@@ -117,7 +141,7 @@ func (v *VendorUseCase) UpdateVendor(ctx context.Context, id string, vendorReq *
 		return nil, fmt.Errorf("failed to update vendor: %w", err)
 	}
 
-	vendorResponse := &models.VendorResponse{
+	vendorResponse := &models.UpdateVendorResponse{
 		ID:          updatedVendor.ID,
 		VendorName:  updatedVendor.VendorName,
 		Description: updatedVendor.Description,

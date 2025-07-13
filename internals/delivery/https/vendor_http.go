@@ -3,6 +3,7 @@ package https
 import (
 	"e-procurement/internals/domain/models"
 	"e-procurement/internals/usecases"
+	constants "e-procurement/pkg/constans"
 	response "e-procurement/pkg/responses"
 	"e-procurement/pkg/validator"
 	"encoding/json"
@@ -32,7 +33,8 @@ func (h *VendorHttp) CreateVendor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// validate user ID is provided
-	if !h.validator.IsValidUUID(vendorReq.UserID) {
+	userID := r.Context().Value(constants.ContextUserIDKey).( string )
+	if !h.validator.IsValidUUID(userID) {
 		response.Error(w, http.StatusBadRequest, "Invalid user")
 		return
 	}
