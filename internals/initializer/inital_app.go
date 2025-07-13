@@ -21,18 +21,23 @@ type App struct {
 
 func InitializeApp() (*App, error) {
 	dbConfig := connections.DBConfig{
-		Driver:          "postgres",
-		DSN: 		   "postgres://postgres:1234@localhost:5432/dropify_store?sslmode=disable" ,
-		MaxOpenConns:    10,
-		MaxIdleConns:    5,
-		ConnMaxLifetime: 5 * time.Minute,
+		Driver:          	"postgres",
+		Host: 		 	 	"localhost",
+		Port: 		 	 	"5432",
+		User: 				"postgres",
+		Password: 			"1234",
+		DBName: 			"e_procurement",
+		Schema: 			"e_procurement",
+		MaxOpenConns:    	10,
+		MaxIdleConns:    	5,
+		ConnMaxLifetime: 	5 * time.Minute,
 	}
 
 	db, err := connections.ConnectDB(dbConfig)
 	if err != nil {
 		return nil, err
 	}
-
+	
 	// initialize jwt
 	jwtSecret := "secreate"
 	JWT:=auth.NewJWT(jwtSecret)
@@ -42,15 +47,17 @@ func InitializeApp() (*App, error) {
 	categoryRepo := repositories.NewCategoryRepository(db)
 	userRepo := repositories.NewUserRepository(db)
 	productRepo := repositories.NewProductUseCase(db)
+	vendorRepo := repositories.NewVendorRepository(db)
 	// intial usecases
-	authUseCase := usecases.NewAuthUseCase(userRepo)
-	productUsecase := usecases.NewProductUsecase(productRepo)
+	authUseCase := usecases.NewAuthUseCase(userRepo,JWT)
+	productUsecase := usecases.NewProductUsecase(productRepo,vendorRepo)
 	categoryUsecase := usecases.NewCategoryUsecase(categoryRepo)
+	vendorUseCase := usecases.NewVendorUseCase(vendorRepo,userRepo)
 	// inital routers
 	r := routers.Router{
 		User:   "user",
 		Auth: *authUseCase,
-		Vendor: "vendor",
+		Vendor: *vendorUseCase,
 		Product: *productUsecase,
 		Category: *categoryUsecase,
 		JWT: JWT,
