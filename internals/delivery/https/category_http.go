@@ -51,15 +51,15 @@ func (h *CategoryHttp) CreateCategory(w http.ResponseWriter, r *http.Request) {
 
 func (h *CategoryHttp) GetCategory(w http.ResponseWriter, r *http.Request) {
 	limitstr, pagestr := r.URL.Query().Get("limit"), r.URL.Query().Get("page")
-
 	limit, err := strconv.Atoi(limitstr)
-	if err != nil  || limit < 0 {
+	if err != nil || limit <= 0 {
 		limit = 10 // default limit
 	}
 	page, err := strconv.Atoi(pagestr)
-	if err != nil || page < 0 {
-		page = 1 // default offset
+	if err != nil || page <= 0 {
+		page = 1 // default page
 	}
+
 	categories,count, err := h.categoryUsecase.GetAllCategoriesUsecase(r.Context(), limit, page)
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
