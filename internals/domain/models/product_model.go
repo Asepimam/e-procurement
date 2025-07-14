@@ -7,6 +7,18 @@ type CreateProductRequest struct {
 	ProductPrice       		float64 `json:"product_price" validate:"required,gt=0"`
 	ProductDescription 		string  `json:"product_description" validate:"required"`
 	ProductCategoryID    	string  `json:"product_category_id" validate:"required"`
+	VendorID           		string  `json:"vendor_id" validate:"required"`
+}
+
+type CreateProductResponse struct {
+	ID                 		string  `json:"id"`
+	ProductName        		string  `json:"product_name"`
+	ProductPrice       		float64 `json:"product_price"`
+	ProductDescription 		string  `json:"product_description"`
+	ProductCategoryID    	string  `json:"product_category_id"`
+	VendorID           		string  `json:"vendor_id"`
+	CreatedAt          		time.Time `json:"created_at"`
+	UpdatedAt		   		time.Time `json:"updated_at"`
 }
 
 type UpdateProductRequest struct {
@@ -15,6 +27,18 @@ type UpdateProductRequest struct {
 	ProductDescription 		string  `json:"product_description" validate:"omitempty"`
 	ProductCategoryID    	string  `json:"product_category_id" validate:"omitempty"`
 }
+
+type UpdateProductResponse struct {
+	ID                 		string  `json:"id"`
+	ProductName        		string  `json:"product_name"`
+	ProductPrice       		float64 `json:"product_price"`
+	ProductDescription 		string  `json:"product_description"`
+	ProductCategoryID    	string  `json:"product_category_id"`
+	VendorID           		string  `json:"vendor_id"`
+	CreatedAt          		time.Time `json:"created_at"`
+	UpdatedAt		   		time.Time `json:"updated_at"`
+}
+
 
 type ResponseProduct struct {
 	ID                 		string  `json:"id"`
