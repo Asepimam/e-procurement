@@ -58,26 +58,163 @@ E-Procurement adalah aplikasi backend berbasis Go untuk sistem multi vendor, mem
 
 ### 2. Vendor & Katalog Produk
 #### CRUD Vendor
-- **GET /api/v1/vendor** : List semua vendor
 - **POST /api/v1/vendor** : Tambah vendor
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+  - **BODY:**
+    ```json
+    {
+      "name": "Vendor Name",
+      "description": "Vendor Description"
+    }
+    ```
+- **GET /api/v1/vendor** : List semua vendor
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+  - **Query Parameters:**
+    - `page`: Nomor halaman (default 1)
+    - `limit`: Jumlah data per halaman (default 10)
+- **GET /api/v1/vendor?page=1&limit=10** : List vendor dengan   pagination
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+  - **Query Parameters:**
+    - `page`: Nomor halaman (default 1)
+    - `limit`: Jumlah data per halaman (default 10)
 - **GET /api/v1/vendor/{id}** : Detail vendor
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
 - **PUT /api/v1/vendor/{id}** : Update vendor
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+  - **BODY:**
+    ```json
+    {
+      "name": "Updated Vendor Name",
+      "description": "Updated Vendor Description"
+    }
+    ```
 - **DELETE /api/v1/vendor/{id}** : Hapus vendor
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
 
 #### CRUD Produk Vendor
-- **GET /api/v1/vendor/catalog** : List semua produk vendor
-- **POST /api/v1/vendor/catalog** : Tambah produk
-- **GET /api/v1/vendor/catalog/{id}** : Detail produk
-- **PUT /api/v1/vendor/catalog/{id}** : Update produk
-- **DELETE /api/v1/vendor/catalog/{id}** : Hapus produk
+- **GET /api/v1/vendor/product** : List semua produk vendor
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+  - **Query Parameters:**
+    - `page`: Nomor halaman (default 1)
+    - `limit`: Jumlah data per halaman (default 10)
+- **GET /api/v1/vendor/product?page=1&limit=10** : List produk vendor dengan pagination
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+  - **Query Parameters:**
+    - `page`: Nomor halaman (default 1)
+    - `limit`: Jumlah data per halaman (default 10)
+- **POST /api/v1/vendor/product** : Tambah produk
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+  - **BODY:**
+    ```json
+    {
+      "product_name":"karbu",
+      "product_price": 100000,
+      "product_description":"otomootip",
+      "product_category_id":"da698079-ba94-4064-bb6f-f894871f9711",
+      "vendor_id":"12d17ede-8dc7-4c7f-ad63-0a9f457c01a3"
+    }
+    ```
+- **GET /api/v1/vendor/product/{id}** : Detail produk
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+
+- **PUT /api/v1/vendor/product/{id}** : Update 
+produk
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+  - **BODY:**
+    ```json
+    {
+      "product_name":"Updated Product Name",
+      "product_price": 120000,
+      "product_description":"Updated Description",
+      "product_category_id":"da698079-ba94-4064-bb6f-f894871f9711",
+    }
+    ```
+- **DELETE /api/v1/vendor/product/{id}** : 
+Hapus produk
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+  
 
 ### 3. CRUD User
-- **GET /api/v1/user** : List semua user
-- **POST /api/v1/user** : Tambah user
-- **GET /api/v1/user/{id}** : Detail user
+- **GET /api/v1/user** : Detail user
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+    - **Query Parameters:**
+    - `Id`: ID produk yang akan dihapus
+    (default 10)
 - **PUT /api/v1/user/{id}** : Update user
-- **DELETE /api/v1/user/{id}** : Hapus user
-
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+  - **BODY:**
+    ```json
+    {
+      "name": "Updated User Name",
+      "email": "EMAI UPDATED",
+      "password": "newpassword"
+    }
+    ```
+- **DELETE /api/v1/user** : Hapus user
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+  - **Query Parameters:**
+    - `Id`: ID user yang akan dihapus
+- **PUT /api/v1/user/password** : Update user
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+  - **BODY:**
+    ```json
+    {
+      "old_password": "oldpassword",
+      "new_password": "newpassword"
+    }
+    ```
+## 4. Kategori Produk
+- **GET /api/v1/category** : List semua kategori produk
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+  - **Query Parameters:**
+    - `page`: Nomor halaman (default 1)
+    - `limit`: Jumlah data per halaman (default 10)
+- **GET /api/v1/category?page=1&limit=10** : List kategori produk dengan pagination
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+  - **Query Parameters:**
+    - `page`: Nomor halaman (default 1)
+    - `limit`: Jumlah data per halaman (default 10)
+- **POST /api/v1/category** : Tambah kategori produk
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+  - **BODY:**
+    ```json
+    {
+      "category_name": "Category Name",
+      "category_description": "Category Description"
+    }
+    ```
+- **Put /api/v1/category/{id}** : Update kategori produk
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
+  - **BODY:**
+    ```json
+    {
+      "category_name": "Updated Category Name",
+      "category_description": "Updated Category Description"
+    }
+    ```
+- **DELETE /api/v1/category/{id}** : Hapus kategori produk
+  - **Bearers:**
+    - **Authorization:** Bearer token dari login
 ## Catatan
 - Pastikan environment database sudah berjalan.
 - Gunakan tools seperti Postman untuk menguji endpoint API.
