@@ -34,13 +34,13 @@ func(u *CategoryUsecase) CreateCategoryUsecase(ctx context.Context, category *mo
 
 // method for Get All Categories
 func(u *CategoryUsecase) GetAllCategoriesUsecase(ctx context.Context, limit, page int) ([]*models.CategoryResponse,int, error) {
-	offset := (page - 1) * limit
 	if limit <= 0 {
 		limit = 10 // default limit
 	}
-	if offset <= 0 {
-		offset = 1 // default offset
+	if page <= 0 {
+		page = 1 // default offset
 	}
+	offset := (page - 1) * limit
 	// Query total count
 	count, err := u.CategoryRepository.CountAllCategories(ctx)
 	if err != nil {

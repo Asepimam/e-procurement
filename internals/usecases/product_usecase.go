@@ -6,7 +6,6 @@ import (
 	"e-procurement/internals/repositories"
 	customContext "e-procurement/pkg/context"
 	"fmt"
-	"log"
 )
 
 type ProductUseCase struct {
@@ -23,7 +22,7 @@ func NewProductUsecase(productRepo *repositories.ProductRepository, vendor *repo
 }
 
 // Method for creted new product
-func(u *ProductUseCase) CreateProducUsecase(ctx context.Context, productReq *models.CreateProductRequest)(*models.ResponseProduct, error){
+func(u *ProductUseCase) CreateProducUsecase(ctx context.Context, productReq *models.CreateProductRequest)(*models.CreateProductResponse, error){
 	userID,err := customContext.GetUserIDFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user ID from context: %w", err)
@@ -44,7 +43,7 @@ func(u *ProductUseCase) CreateProducUsecase(ctx context.Context, productReq *mod
 		return nil, err
 	}
 	
-	reponsesProduct := &models.ResponseProduct{
+	reponsesProduct := &models.CreateProductResponse{
 		ID:                 	product.ID,
 		ProductName: 	  		product.ProductName,
 		ProductPrice: 			product.ProductPrice,
@@ -58,16 +57,15 @@ func(u *ProductUseCase) CreateProducUsecase(ctx context.Context, productReq *mod
 }
 
 // Method to Get All Products
-func(u *ProductUseCase) GetAllProducts(ctx context.Context, limit, offset int) ([]*models.ResponseProduct, int, error) {
-	log.Printf("Limit: %d, Offset: %d", limit, offset)
-	offset = (offset - 1) * limit
+func(u *ProductUseCase) GetAllProducts(ctx context.Context, limit, page int) ([]*models.ResponseProduct, int, error) {
 	if limit <= 0 {
 		limit = 10 // default limit
 	}
-	if offset <= 0 {
-		offset = 1 // default offset
+	if page <= 0 {
+		page = 1 // default offset
 	}
-	if limit > 100  || offset > 100 {
+	offset := (page - 1) * limit
+	if limit > 100  || page > 100 {
 		return nil, 0, fmt.Errorf("limit and offset must be between 1 and 100")
 	}
 	// Query total count
@@ -103,7 +101,7 @@ func(u *ProductUseCase) GetAllProducts(ctx context.Context, limit, offset int) (
 }
 
 // Method to Get Products By Category
-func(u *ProductUseCase) GetProductsByCategory(ctx context.Context, category string, limit, offset int) ([]*models.Product,int, error) {
+func(u *ProductUseCase) GetProductsByCategory(ctx context.Context, category string, limit, offset int) ([]*models.ResponseProduct,int, error) {
 	if limit <= 0 {
 		limit = 10 // default limit
 	}
@@ -122,22 +120,51 @@ func(u *ProductUseCase) GetProductsByCategory(ctx context.Context, category stri
 	if err != nil {
 		return nil,0, fmt.Errorf("failed to count products: %w", err)
 	}
-
-	return products,count,nil
+	var productsResponse []*models.ResponseProduct
+	for _, product := range products {
+		productsResponse = append(productsResponse, &models.ResponseProduct{
+			ID:                  	product.ID,
+			ProductName:        	product.ProductName,
+			ProductPrice:       	product.ProductPrice,
+			ProductDescription: 	product.ProductDescription,
+			ProductCategoryID:  	product.ProductCategoryID,
+			ProductCategoryName: 	product.ProductCategoryName,
+			VendorID:           	product.VendorID,
+			VendorName: 	   		product.VendorName,
+			CreatedAt:          	product.CreatedAt,
+			UpdatedAt:          	product.UpdatedAt,
+		})
+	}
+	return productsResponse,count,nil
 }
 
 
 // Method to Get Product By ID
-func(u *ProductUseCase) GetProductByID(ctx context.Context, id string) (*models.Product, error) {
+func(u *ProductUseCase) GetProductByID(ctx context.Context, id string) (*models.ResponseProduct, error) {
 	product, err := u.productRepository.GetProductByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get product by ID: %w", err)
 	}
-	return product, nil
+	if product == nil {
+		return nil, nil // Product not found
+	}
+	productResponse := &models.ResponseProduct{
+		ID:                 	product.ID,
+		ProductName:        	product.ProductName,
+		ProductPrice:       	product.ProductPrice,
+		ProductDescription: 	product.ProductDescription,
+		ProductCategoryID:  	product.ProductCategoryID,
+		ProductCategoryName: 	product.ProductCategoryName,
+		VendorID:           	product.VendorID,
+		VendorName: 	   		product.VendorName,
+		CreatedAt:          	product.CreatedAt,
+		UpdatedAt:          	product.UpdatedAt,
+	}
+	return productResponse, nil
 }
 
 // Method to Update Product
-func(u *ProductUseCase) UpdateProduct(ctx context.Context, id string, productReq *models.UpdateProductRequest) (*models.ResponseProduct, error) {
+func(u *ProductUseCase) UpdateProduct(ctx context.Context, id string, productReq *models.UpdateProductRequest) (*models.UpdateProductResponse, error) {
 	// Check if product exists
 	existingProduct, err := u.productRepository.GetProductByID(ctx, id)
 	if err != nil {
@@ -165,7 +192,7 @@ func(u *ProductUseCase) UpdateProduct(ctx context.Context, id string, productReq
 	if err != nil {
 		return nil, fmt.Errorf("failed to update product: %w", err)
 	}
-	productResponse := &models.ResponseProduct{
+	productResponse := &models.UpdateProductResponse{
 		ID:                  updatedProduct.ID,
 		ProductName:         updatedProduct.ProductName,
 		ProductPrice:        updatedProduct.ProductPrice,

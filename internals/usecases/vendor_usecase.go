@@ -64,15 +64,17 @@ func (v *VendorUseCase) CreateVendorUsecase(ctx context.Context, vendorReq *mode
 }
 
 // Method to Get All Vendors
-func (v *VendorUseCase) GetAllVendors(ctx context.Context, limit, page int) ([]*models.Vendor, int, error) {
-	Offset := (page - 1) * limit
-
+func (v *VendorUseCase) GetAllVendors(ctx context.Context, limit, page int) ([]*models.VendorResponse, int, error) {
+	
 	if limit <= 0 {
 		limit = 10 // default limit
 	}
-	if Offset <= 0 {
-		Offset = 1 // default offset
+	if page <= 0 {
+		page = 1 // default offset
 	}
+	// Calculate offset
+	Offset := (page - 1) * limit
+
 	if limit > 100  || Offset > 100 {
 		return nil, 0, fmt.Errorf("limit and offset must be less than or equal to 100")
 	}
@@ -89,8 +91,20 @@ func (v *VendorUseCase) GetAllVendors(ctx context.Context, limit, page int) ([]*
 	if err != nil {
 		return nil, 0, err
 	}
-
-	return vendors, count, nil
+	var vendorResponses []*models.VendorResponse
+	for _, vendor := range vendors {
+		vendorResponses = append(vendorResponses, &models.VendorResponse{
+			ID:          vendor.ID,
+			VendorName:  vendor.VendorName,
+			Description: vendor.Description,
+			UserID:      vendor.UserID,
+			UserName:    vendor.UserName,
+			CreatedAt:   vendor.CreatedAt,
+			UpdatedAt:   vendor.UpdatedAt,
+		})
+		
+	}
+	return vendorResponses, count, nil
 }
 
 // Method to Get Vendor by ID
