@@ -8,7 +8,6 @@ import (
 	"e-procurement/pkg/encripted"
 	"errors"
 	"fmt"
-	"log"
 )
 
 type AuthUseCase struct {
@@ -30,11 +29,8 @@ func NewAuthUseCase(
 
 func(u *AuthUseCase) Authenticate(ctx context.Context, data *models.LoginRequest)(*models.UserResponse,string, error) {
 	
-	log.Printf("Authenticating user with email: %s", data.Email)
 	user, err := u.repo.Authenticate(ctx, data.Email)
-	log.Printf("User found: %v", user)
 	if err != nil {
-		log.Printf("Error authenticating user: %v", err)
 		return nil,"", errors.New("invalid email or password")
 	}
 
