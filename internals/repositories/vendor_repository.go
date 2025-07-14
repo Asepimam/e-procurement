@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"e-procurement/internals/domain/models"
-	"log"
 
 	sq "github.com/Masterminds/squirrel"
 )
@@ -61,52 +60,55 @@ func (v *VendorRepository) CreateVendor(ctx context.Context, userId string, vend
 // parameters:
 // 		ctx: context for request-scoped values and cancellation.
 // 		limit: number of vendors to retrieve.
-func (v *VendorRepository) GetAllVendors(ctx context.Context, limit, offset int) ([]*models.Vendor, error) {
-	log.Println("Fetching all vendors with limit:", limit, "and offset:", offset, "from database")
-	query := v.SQLBuilder.
-		Select(
-			"v.id", 
-			"v.vendor_name", 
-			"v.description", 
-			"v.user_id", 
-			"u.user_name",
-			"v.created_at", 
-			"v.updated_at",
-			).
-		From("e_procurement.vendors v").
-		LeftJoin("e_procurement.users u ON v.user_id = u.id").
-		Limit(uint64(limit)).
-		Offset(uint64(offset)).
-		Suffix("ORDER BY v.created_")
-
-	rows, err := query.RunWith(v.db).QueryContext(ctx)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil // No vendors found
-		}
-		return nil, err
-	}
-	defer rows.Close()
-	var vendors []*models.Vendor
-	for rows.Next() {
-		var vendor models.Vendor
-		err := rows.Scan(
-			&vendor.ID,
-			&vendor.VendorName,
-			&vendor.Description,
-			&vendor.UserID,
-			&vendor.UserName,
-			&vendor.CreatedAt,
-			&vendor.UpdatedAt,
-		)
-		if err != nil {
-			log.Println("Error scanning vendor row:", err)
-			return nil, err
-		}
-		vendors = append(vendors, &vendor)
-	}
-	
-	return vendors, nil
+func (v *VendorRepository) GetAllVendors(ctx context.Context, limit, offset int) ([]*models.Vendor, error) {    
+    query := v.SQLBuilder.
+        Select(
+            "v.id",
+            "v.vendor_name",
+            "v.description",
+            "v.user_id",
+            "u.user_name",
+            "v.created_at",
+            "v.updated_at",
+        ).
+        From("e_procurement.vendors v").
+        LeftJoin("e_procurement.users u ON v.user_id = u.id").
+        OrderBy("v.created_at DESC").
+        Limit(uint64(limit)).
+        Offset(uint64(offset))
+    
+    rows, err := query.RunWith(v.db).QueryContext(ctx)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            return nil, nil
+        }
+        return nil, err
+    }
+    defer rows.Close()
+    
+    var vendors []*models.Vendor
+    for rows.Next() {
+        var vendor models.Vendor
+        err := rows.Scan(
+            &vendor.ID,
+            &vendor.VendorName,
+            &vendor.Description,
+            &vendor.UserID,
+            &vendor.UserName,
+            &vendor.CreatedAt,
+            &vendor.UpdatedAt,
+        )
+        if err != nil {
+            return nil, err
+        }
+        vendors = append(vendors, &vendor)
+    }
+    
+    if err = rows.Err(); err != nil {
+        return nil, err
+    }
+    
+    return vendors, nil
 }
 	
 // Method to Get Vendor By ID
