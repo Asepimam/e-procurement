@@ -37,8 +37,11 @@ func(u *ProductUseCase) CreateProducUsecase(ctx context.Context, productReq *mod
 	if userVendor == nil {
 		return nil, fmt.Errorf("vendor with user ID %s does not exist", userID)
 	}
-
-	product, err := u.productRepository.CreateProduct(ctx,userVendor.ID, productReq)
+	// validate vendor ID and vendor body is user vendor
+	if productReq.VendorID != userVendor.ID {
+		return nil, fmt.Errorf("vendor ID Canot create product for other vendor")
+	}
+	product, err := u.productRepository.CreateProduct(ctx, productReq)
 	if err != nil {
 		return nil, err
 	}

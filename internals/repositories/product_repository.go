@@ -32,11 +32,11 @@ func NewProductUseCase(db *sql.DB) *ProductRepository {
 // returns:
 // 		ProductResponse: a ProductResponse model containing the details of the created product.
 // 		errors: if any occurred during the operation.
-func(p *ProductRepository) CreateProduct(ctx context.Context,vendorID string, product *models.CreateProductRequest ) (*models.Product, error) {
+func(p *ProductRepository) CreateProduct(ctx context.Context, product *models.CreateProductRequest ) (*models.Product, error) {
 	query := p.SQLBuilder.
 		Insert("products").
 		Columns("product_name", "product_price", "product_description", "product_category","vendor_id").
-		Values(product.ProductName, product.ProductPrice, product.ProductDescription, product.ProductCategoryID, vendorID).
+		Values(product.ProductName, product.ProductPrice, product.ProductDescription, product.ProductCategoryID, product.VendorID).
 		Suffix("RETURNING id, product_name, product_price, product_description, product_category, vendor_id, created_at, updated_at")
 	row := query.RunWith(p.db).QueryRowContext(ctx)
 
