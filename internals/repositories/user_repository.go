@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"e-procurement/internals/domain/models"
-	"log"
 
 	sq "github.com/Masterminds/squirrel"
 )
@@ -192,7 +191,6 @@ func (r *UserRepository) Delete(ctx context.Context, id string) error {
 	// 		UserResponse: a pointer to UserResponse containing user details if found.
 	//  	error: an error if any occurred during the operation.
 func (r *UserRepository) Authenticate(ctx context.Context, email string) (*models.User, error) {
-	log.Printf("Authenticating user with email: %s", email)
 	query := r.SQKBuilder.
 		Select("id, user_name, email, password, role").
 		From("e_procurement.users").

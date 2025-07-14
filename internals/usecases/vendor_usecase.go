@@ -6,7 +6,6 @@ import (
 	"e-procurement/internals/repositories"
 	customContext "e-procurement/pkg/context"
 	"fmt"
-	"log"
 )
 
 type VendorUseCase struct {
@@ -80,14 +79,14 @@ func (v *VendorUseCase) GetAllVendors(ctx context.Context, limit, page int) ([]*
 	}
 	// Query total count
 	count, err := v.vendorRepository.CountVendors(ctx)
-	log.Println("Total vendors count:", count)
+	
 	if err != nil {
 		return nil, 0, err
 	}
-	log.Println("Limit:", limit, "Offset:", Offset)
+	
 	// Get vendors from repository
 	vendors, err := v.vendorRepository.GetAllVendors(ctx, limit, Offset )
-	log.Println("Vendors retrieved:", vendors)
+	
 	if err != nil {
 		return nil, 0, err
 	}

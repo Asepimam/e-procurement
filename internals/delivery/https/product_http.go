@@ -6,7 +6,6 @@ import (
 	response "e-procurement/pkg/responses"
 	"e-procurement/pkg/validator"
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -54,7 +53,6 @@ func(h *ProductHttp) GetAllProducts(w http.ResponseWriter, r *http.Request) {
 	if err != nil || page <= 0 {
 		page = 1 // default page
 	}
-	log.Printf("Limithttp: %d, Pagehttp: %d", limit, page)
 	products, count, err := h.productusecase.GetAllProducts(r.Context(), limit, page)
 	if err != nil {
 		response.Error(w, http.StatusInternalServerError, err.Error())
